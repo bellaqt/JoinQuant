@@ -18,10 +18,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Debug AWS identity
-      run: |
-        aws sts get-caller-identity
-
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
