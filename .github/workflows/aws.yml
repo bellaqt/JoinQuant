@@ -30,7 +30,7 @@ jobs:
 
     - name: Build and push image
       run: |
-        cd JoinQuant.Server
+        cd JoinQuant.Server/Python_Data
         docker build -t $ECR_REPOSITORY:latest .
         docker tag $ECR_REPOSITORY:latest 537736509332.dkr.ecr.ap-southeast-2.amazonaws.com/$ECR_REPOSITORY:latest
         docker tag $ECR_REPOSITORY:latest 537736509332.dkr.ecr.ap-southeast-2.amazonaws.com/$ECR_REPOSITORY:sha-${{ github.sha }}
