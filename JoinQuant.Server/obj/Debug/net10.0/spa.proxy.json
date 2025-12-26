@@ -1,0 +1,10 @@
+{
+"SpaProxyServer": {
+"ServerUrl": "https://localhost:56665",
+"RedirectUrl": "",
+"LaunchCommand": "npm run dev",
+"WorkingDirectory": "D:\\学校\\学习课件\\26s1\\fintech\\JoinQuant\\JoinQuant.Server\\..\\joinquant.client",
+"MaxTimeoutInSeconds": "120",
+"KeepRunning": "false"
+}
+}
