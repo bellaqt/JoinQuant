@@ -3,6 +3,9 @@ import json
 import requests
 from sqlalchemy import create_engine
 from botocore.exceptions import ClientError
+from datetime import date
+
+today = date.today().strftime("%Y-%m-%d")
 
 REGION = "ap-southeast-2"
 FRED_URL = "https://api.stlouisfed.org/fred/series/observations"
@@ -11,6 +14,8 @@ RDS_SECRET_NAME = "rds!db-fab82ed6-ca28-4884-82a3-1b311494c065"
 # AWS clients
 ssm = boto3.client("ssm", region_name=REGION)
 secrets_client = boto3.client("secretsmanager", region_name=REGION)
+# AWS Email Service client
+ses = boto3.client("ses", region_name=REGION)
 
 # SQL to create series table
 CREATE_SERIES_TABLE_SQL = """
@@ -106,14 +111,14 @@ def get_mysql_engine():
     db_port = 3306
     db_name = "joinquant"
 
-    """engine = create_engine(
+    engine = create_engine(
         f"mysql+pymysql://{cred['username']}:{cred['password']}"
         f"@{db_host}:{db_port}/",
         pool_recycle=3600
-    )"""
-    engine = create_engine(
-        "mysql+pymysql://admin:-4OvmwqhACiV(Tn6?TUEcB8cR[Zd@127.0.0.1:3307/joinquant"
     )
+    """engine = create_engine(
+        "mysql+pymysql://admin:-4OvmwqhACiV(Tn6?TUEcB8cR[Zd@127.0.0.1:3307/joinquant"
+    )"""
 
     with engine.begin() as conn:
         conn.exec_driver_sql(
@@ -165,7 +170,6 @@ def convert_value(raw_value, value_unit):
         return raw_value    
     
 def converted_value_u(value_unit):
-    print("value_unit:", value_unit)
     if value_unit == 'Millions':
         return '\u4e07(10 thousand)'    
     elif value_unit == 'Billions':
@@ -248,6 +252,55 @@ def cleanup_observations(conn):
     """
     conn.exec_driver_sql(sql)
 
+def query_mail_observations(conn):
+    sql = """
+    SELECT
+        o.series_id,
+        o.frequency,
+        s.title_cn,
+        o.obs_date,
+        o.value,
+        o.value_unit
+    FROM observations o
+    JOIN fred_series s
+      ON o.series_id = s.series_id
+    WHERE o.channel_name = 'mail'
+    ORDER BY o.series_id, o.obs_date DESC
+    """
+    return conn.exec_driver_sql(sql).fetchall()
+
+def build_mail_body(rows):
+    print("Building email body...")
+    if not rows:
+        return None
+
+    lines = ["Daily FRED Update (\u6570\u636e\u4e3a\u6700\u65b0\u4e00\u671f)\n"]
+    current_series = None
+
+    for r in rows:
+        if current_series is not None and r.series_id != current_series:
+            lines.append("")
+
+        lines.append(
+            f"- {r.title_cn} | {r.frequency} |"
+            f"{r.obs_date} | "
+            f"{r.value} {r.value_unit}"
+        )
+
+        current_series = r.series_id
+    return "\n".join(lines)
+
+def send_mail(body):
+    print("Sending email...")
+    resp = ses.send_email(
+        Source="dou20254@gmail.com",
+        Destination={"ToAddresses": ["chang20204@gmail.com"]},
+        Message={
+            "Subject": {"Data": f"Daily FRED Update ({today})", "Charset": "UTF-8"},
+            "Body": {"Text": {"Data": body, "Charset": "UTF-8"}}
+        }
+    )
+    print("SES response:", resp)
 
 # ---------- pipeline ----------
 def run_fred_pipeline():
@@ -279,6 +332,11 @@ def run_fred_pipeline():
                cleanup_observations(conn)
 
         delete_missing_series(conn, list(series_config.keys()))
+        rows = query_mail_observations(conn)
+        body = build_mail_body(rows)
+
+        if body:
+            send_mail(body)
     print("FRED pipeline completed.")
 
 # ---------- main ----------
