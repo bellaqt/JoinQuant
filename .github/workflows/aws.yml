@@ -41,6 +41,7 @@ jobs:
       run: |
         aws ecs run-task \
           --cluster $ECS_CLUSTER \
-          --task-definition $ECS_TASK_DEFINITION \
+          --task-definition ${{ steps.render-task-def.outputs.task-definition }} \
           --launch-type FARGATE \
           --network-configuration "awsvpcConfiguration={subnets=[$ECS_SUBNETS],securityGroups=[$ECS_SECURITY_GROUP],assignPublicIp=ENABLED}"
+
