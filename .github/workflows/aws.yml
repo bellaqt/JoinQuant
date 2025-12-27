@@ -45,6 +45,7 @@ jobs:
           --requires-compatibilities FARGATE \
           --cpu 256 \
           --memory 512 \
+          --task-role-arn arn:aws:iam::537736509332:role/ecsTaskExecutionRole \
           --execution-role-arn arn:aws:iam::537736509332:role/ecsTaskExecutionRole \
           --container-definitions "[
             {
