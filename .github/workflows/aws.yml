@@ -37,11 +37,38 @@ jobs:
         docker push 537736509332.dkr.ecr.ap-southeast-2.amazonaws.com/$ECR_REPOSITORY:latest
         docker push 537736509332.dkr.ecr.ap-southeast-2.amazonaws.com/$ECR_REPOSITORY:sha-${{ github.sha }}
 
-    - name: Run ECS Task
+    - name: Register task definition and run ECS task
       run: |
+        TASK_DEF_ARN=$(aws ecs register-task-definition \
+          --family $ECS_TASK_DEFINITION \
+          --network-mode awsvpc \
+          --requires-compatibilities FARGATE \
+          --cpu 256 \
+          --memory 512 \
+          --execution-role-arn arn:aws:iam::537736509332:role/ecsTaskExecutionRole \
+          --container-definitions "[
+            {
+              \"name\": \"python-job\",
+              \"image\": \"537736509332.dkr.ecr.ap-southeast-2.amazonaws.com/$ECR_REPOSITORY:latest\",
+              \"essential\": true,
+              \"logConfiguration\": {
+                \"logDriver\": \"awslogs\",
+                \"options\": {
+                  \"awslogs-group\": \"/ecs/python-joinquant\",
+                  \"awslogs-region\": \"ap-southeast-2\",
+                  \"awslogs-stream-prefix\": \"ecs\"
+                }
+              }
+            }
+          ]" \
+          --query 'taskDefinition.taskDefinitionArn' \
+          --output text)
+
+        echo "Using task definition: $TASK_DEF_ARN"
+
         aws ecs run-task \
           --cluster $ECS_CLUSTER \
-          --task-definition ${{ steps.render-task-def.outputs.task-definition }} \
+          --task-definition $TASK_DEF_ARN \
           --launch-type FARGATE \
           --network-configuration "awsvpcConfiguration={subnets=[$ECS_SUBNETS],securityGroups=[$ECS_SECURITY_GROUP],assignPublicIp=ENABLED}"
 
