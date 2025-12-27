@@ -49,16 +49,8 @@ jobs:
           --container-definitions "[
             {
               \"name\": \"python-job\",
-              \"image\": \"537736509332.dkr.ecr.ap-southeast-2.amazonaws.com/$ECR_REPOSITORY:sha-${{ github.sha }}\",
-              \"essential\": true,
-              \"logConfiguration\": {
-                \"logDriver\": \"awslogs\",
-                \"options\": {
-                  \"awslogs-group\": \"/ecs/python-joinquant\",
-                  \"awslogs-region\": \"ap-southeast-2\",
-                  \"awslogs-stream-prefix\": \"ecs\"
-                }
-              }
+              \"image\": \"537736509332.dkr.ecr.ap-southeast-2.amazonaws.com/$ECR_REPOSITORY:latest\" ,
+              \"essential\": true
             }
           ]" \
           --query 'taskDefinition.taskDefinitionArn' \
