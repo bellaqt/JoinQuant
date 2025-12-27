@@ -43,8 +43,6 @@ jobs:
           --family $ECS_TASK_DEFINITION \
           --network-mode awsvpc \
           --requires-compatibilities FARGATE \
-          --cpu 256 \
-          --memory 512 \
           --execution-role-arn arn:aws:iam::537736509332:role/ecsTaskExecutionRole \
           --container-definitions "[
             {
