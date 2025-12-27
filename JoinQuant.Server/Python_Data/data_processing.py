@@ -294,7 +294,7 @@ def send_mail(body):
     print("Sending email...")
     resp = ses.send_email(
         Source="dou20254@gmail.com",
-        Destination={"ToAddresses": ["chang20204@gmail.com"]},
+        Destination={"ToAddresses": ["chang20204@gmail.com","syh227ss@163.com"]},
         Message={
             "Subject": {"Data": f"Daily FRED Update ({today})", "Charset": "UTF-8"},
             "Body": {"Text": {"Data": body, "Charset": "UTF-8"}}
