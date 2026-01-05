@@ -278,7 +278,7 @@ def build_mail_body(rows):
             if current_series is not None:
                 lines.append("<br>")
 
-            web_url = f"http://localhost:5016/web/series/{r.series_id}"
+            web_url = f"http://JoinquantTarget-1804201283.ap-southeast-2.elb.amazonaws.com/web/series/{r.series_id}"
 
             lines.append(
                 f'<p><strong>'
