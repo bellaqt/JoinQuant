@@ -55,7 +55,7 @@ jobs:
               \"logConfiguration\": {
                 \"logDriver\": \"awslogs\",
                 \"options\": {
-                  \"awslogs-group\": \"/ecs/python-job\",
+                  \"awslogs-group\": \"/ecs/Python_Joinquant",
                   \"awslogs-region\": \"ap-southeast-2\",
                   \"awslogs-stream-prefix\": \"ecs\"
                 }
