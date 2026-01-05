@@ -115,9 +115,9 @@ def get_mysql_engine():
         f"mysql+pymysql://{cred['username']}:{cred['password']}"
         f"@{db_host}:{db_port}/",
         pool_recycle=3600
-    )
+    
     """engine = create_engine(
-        "mysql+pymysql://admin:-4OvmwqhACiV(Tn6?TUEcB8cR[Zd@127.0.0.1:3307/joinquant"
+        "mysql+pymysql://admin:mhvV5*pu_9)Lj9.qPM7ScK9z0mrv@127.0.0.1:3307/joinquant"
     )"""
 
     with engine.begin() as conn:
@@ -163,19 +163,14 @@ def convert_value(raw_value, value_unit):
         return None
 
     if value_unit == 'Millions':
-        return raw_value * 100     
+        return raw_value * 0.01     
     elif value_unit == 'Billions':
         return raw_value * 10       
     else:
         return raw_value    
     
 def converted_value_u(value_unit):
-    if value_unit == 'Millions':
-        return '\u4e07(10 thousand)'    
-    elif value_unit == 'Billions':
-        return '\u4ebf(100 million)'   
-    else:
-        return value_unit
+    return '\u4ebf(100 million)'   
 
 def get_series_unit(conn, series_id, cache={}):
     if series_id in cache:
@@ -278,16 +273,25 @@ def build_mail_body(rows):
     current_series = None
 
     for r in rows:
-        if current_series is not None and r.series_id != current_series:
-            lines.append("")
+        if r.series_id != current_series:
+            if current_series is not None:
+                lines.append("<br>")
+
+            web_url = f"http://localhost:5016/web/series/{r.series_id}"
+
+            lines.append(
+                f'<p><strong>'
+                f'<a href="{web_url}">{r.title_cn}</a>'
+                f'</strong></p>'
+            )
+
+            current_series = r.series_id
 
         lines.append(
-            f"- {r.title_cn} | {r.frequency} |"
-            f"{r.obs_date} | "
-            f"{r.value} {r.value_unit}"
+            f"<li>{r.frequency} | {r.obs_date} | "
+            f"{r.value} {r.value_unit}</li>"
         )
 
-        current_series = r.series_id
     print("Email body built.")
     return "\n".join(lines)
 
@@ -295,10 +299,18 @@ def send_mail(body):
     print("Sending email...")
     resp = ses.send_email(
         Source="dou20254@gmail.com",
-        Destination={"ToAddresses": ["chang20204@gmail.com","syh227ss@163.com"]},
+        Destination={"ToAddresses": ["chang20204@gmail.com"]},
         Message={
-            "Subject": {"Data": f"Daily FRED Update ({today})", "Charset": "UTF-8"},
-            "Body": {"Text": {"Data": body, "Charset": "UTF-8"}}
+            "Subject": {
+                "Data": f"Daily FRED Update ({today})",
+                "Charset": "UTF-8"
+            },
+            "Body": {
+                "Html": {
+                    "Data": body,
+                    "Charset": "UTF-8"
+                }
+            }
         }
     )
     print("SES response:", resp)

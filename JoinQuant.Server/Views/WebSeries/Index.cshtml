@@ -1,0 +1,28 @@
+﻿@model List<JoinQuant.Server.Models.Observation>
+
+<h2>Daily FRED Update (Web)</h2>
+
+<p><b>Series ID:</b> @ViewBag.SeriesId</p>
+<p><b>Channel:</b> web</p>
+
+<hr />
+
+<table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Value</th>
+            <th>Unit</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var obs in Model)
+        {
+            <tr>
+                <td>@obs.ObsDate.ToString("yyyy-MM-dd")</td>
+                <td>@obs.Value</td>
+                <td>@obs.ValueUnit</td>
+            </tr>
+        }
+    </tbody>
+</table>
