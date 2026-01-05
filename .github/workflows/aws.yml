@@ -72,3 +72,18 @@ jobs:
           --task-definition $TASK_DEF_ARN \
           --launch-type FARGATE \
           --network-configuration "awsvpcConfiguration={subnets=[$ECS_SUBNETS],securityGroups=[$ECS_SECURITY_GROUP],assignPublicIp=ENABLED}"
+
+    - name: Build and push .NET image (.net DockerFile)
+      run: |
+          docker build \
+            -f JoinQuant.Server/Dockerfile \
+            -t joinquant-dotnet:latest \
+            .
+          docker tag joinquant-dotnet:latest 537736509332.dkr.ecr.ap-southeast-2.amazonaws.com/tian/joinquant-dotnet:latest
+          docker push 537736509332.dkr.ecr.ap-southeast-2.amazonaws.com/tian/joinquant-dotnet:latest
+      
+          aws ecs update-service \
+          --cluster joinquant-fargate-cluster \
+          --service JoinQuant_DotNet-service-3kmflqhi \
+          --force-new-deployment
+
