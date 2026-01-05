@@ -1,37 +1,43 @@
-# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-# This stage is used when running from VS in fast mode (Default for Debug configuration)
+# -------- runtime base --------
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-
-# This stage is used to build the service project
+# -------- build with node --------
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS with-node
-RUN apt-get update
-RUN apt-get install curl
-RUN curl -sL https://deb.nodesource.com/setup_20.x | bash
-RUN apt-get -y install nodejs
+RUN apt-get update \
+ && apt-get install -y curl \
+ && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+ && apt-get install -y nodejs
 
-
+# -------- restore & build --------
 FROM with-node AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["JoinQuant.Server/JoinQuant.Server.csproj", "JoinQuant.Server/"]
-COPY ["joinquant.client/joinquant.client.esproj", "joinquant.client/"]
-RUN dotnet restore "./JoinQuant.Server/JoinQuant.Server.csproj"
-COPY . .
-WORKDIR "/src/JoinQuant.Server"
-RUN dotnet build "./JoinQuant.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-# This stage is used to publish the service project to be copied to the final stage
+# copy only project files first (for cache + correct restore)
+COPY JoinQuant.Server/JoinQuant.Server.csproj JoinQuant.Server/
+COPY joinquant.client/joinquant.client.esproj joinquant.client/
+
+# restore explicitly
+RUN dotnet restore JoinQuant.Server/JoinQuant.Server.csproj
+
+# now copy the rest
+COPY . .
+
+WORKDIR /src/JoinQuant.Server
+RUN dotnet build JoinQuant.Server.csproj -c $BUILD_CONFIGURATION -o /app/build
+
+# -------- publish --------
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./JoinQuant.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish JoinQuant.Server.csproj \
+    -c $BUILD_CONFIGURATION \
+    -o /app/publish \
+    /p:UseAppHost=false
 
-# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
+# -------- final image --------
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
