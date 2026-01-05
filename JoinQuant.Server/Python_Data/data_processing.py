@@ -115,6 +115,7 @@ def get_mysql_engine():
         f"mysql+pymysql://{cred['username']}:{cred['password']}"
         f"@{db_host}:{db_port}/",
         pool_recycle=3600
+    )
     
     """engine = create_engine(
         "mysql+pymysql://admin:mhvV5*pu_9)Lj9.qPM7ScK9z0mrv@127.0.0.1:3307/joinquant"
