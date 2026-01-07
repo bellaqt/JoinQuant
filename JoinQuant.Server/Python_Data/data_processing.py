@@ -271,7 +271,7 @@ def build_mail_body(rows):
         return None
 
     lines = ["Daily FRED Update (\u6570\u636e\u4e3a\u6700\u65b0\u4e00\u671f)\n"]
-    current_series = None
+    current_series = None 
 
     for r in rows:
         if r.series_id != current_series:
